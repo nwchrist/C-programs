@@ -1,0 +1,83 @@
+/* 
+/  Nicholas Christensen
+/  nwchrist@mtu.edu
+/
+/  This program takes in a length integer and a set of double double coordinate pairs and then calculates the bounding box as well as a path between the 
+/  points which is determined by the distance between the current point and the next closest point. 
+/
+*/
+
+#include <stdio.h>
+#include <float.h>
+#include <math.h>
+
+int main() {
+	
+	//Declare some variables
+	int length;										//Number of coordinate pairs
+	scanf("%d", &length);							//Read in length
+	double x [length];								//Declare the x array
+	double y [length];								//Declare the y array
+	double pairMin [2] = {DBL_MAX, DBL_MAX};		//Set the initial bottom left point of the bounding box
+	double pairMax [2] = {-DBL_MAX, -DBL_MAX};		//Set the initial top right point of the bounding box
+	
+	for (int i = 0; i < length; i++) {				//In this block of code we calculate the bounding box
+		scanf("%lf%lf", &x[i], &y[i]);
+		if (x[i] < pairMin[0]) {
+			pairMin[0] = x[i];
+		}
+		if (x[i] > pairMax[0]) {
+			pairMax[0] = x[i];
+		}
+		if (y[i] < pairMin[1]) {
+			pairMin[1] = y[i];
+		}
+		if (y[i] > pairMax[1]) {
+			pairMax[1] = y[i];
+		}
+	}
+	
+	printf("%.6f %.6f\n%.6f %.6f\n\n%d\n%.6f %.6f\n", pairMin[0], pairMin[1], pairMax[0], pairMax[1], length, x[0], y[0]);		//Print out the bounding box, length, and first point
+	
+	//Declare some more variables
+	double currentPoint [2] = {x[0], y[0]}; 
+	double distanceTraveled = 0;
+	double pointsPreviouslyTraveled [length];
+	pointsPreviouslyTraveled[0] = 1;
+	for (int i = 1; i < length; i++) {		//This for loop is just to initialize the pointsPreviouslyTraveled array since c99 won't let me initialize an array of length[variable]
+		pointsPreviouslyTraveled[i] = 0;
+	}
+	//Even more variables
+	double closestDistance = DBL_MAX;		//Used to hold the current next closest point during iteration
+	double nextDistance;					//Used to hold the distance to the next point in iteration
+	int index = 0;							//Used to record the index of the next closest point
+	int checker = 0;						//Used to keep track of if all points have been visited yet
+
+	while (checker == 0) {
+		checker = 1;										//We will assume that all points have been visited until we check if any have not been, as to avoid an infinite loop
+		for (int i = 0; i < length; i++) {					//Here we iterate through the arrays of points to find the next closest point that has not been visited
+			nextDistance = sqrt(((x[i]-currentPoint[0])*(x[i]-currentPoint[0]))+((y[i]-currentPoint[1])*(y[i]-currentPoint[1])));	//This line calculates the distance to said point
+			if (nextDistance < closestDistance && pointsPreviouslyTraveled[i] != 1) {												//And here we update a variable if the point is the closest so far, and has not yet been visited
+				closestDistance = nextDistance;
+				index = i;
+				
+			}
+		}
+		
+		printf("%.6f %.6f\n", x[index], y[index]);			//Print out the next point
+		
+		//Update variables based on the next point in the path
+		distanceTraveled = distanceTraveled + closestDistance;
+		pointsPreviouslyTraveled[index] = 1;
+		closestDistance = DBL_MAX;
+		currentPoint[0] = x[index];
+		currentPoint[1] = y[index];
+		
+		for (int i = 0; i < length; i++) {					//Iterates through the pointsPreviouslyTraveled array to determine if all points have been visited
+			if (pointsPreviouslyTraveled[i] == 0) {			//If any of the points have not been visited, the checker is set to 0, which indicates the while loop to keep iterating
+				checker = 0;
+			}
+		}
+	}
+	printf("\n%.6f\n", distanceTraveled);					//Print out the total distance traveled
+}
